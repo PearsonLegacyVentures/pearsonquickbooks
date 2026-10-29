@@ -5,6 +5,8 @@ const enc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const validConfig = /^https:\/\/[^/]+\.supabase\.co$/.test(config.supabaseUrl || '') && /^(sb_publishable_|eyJ)/.test(config.supabasePublishableKey || '');
 const blankWorkspace = name => ({version:1,demo:false,business:{name,email:'',phone:'',address:'',taxId:'',logo:'',currency:'BSD',taxLabel:'VAT',taxRate:0,invoicePrefix:'INV',estimatePrefix:'EST',nextInvoice:1001,nextEstimate:1001,website:'',paymentInstructions:'',terms:'Thank you for your business.'},customers:[],items:[],documents:[],expenses:[]});
 let client, session, profile, workspace, memberRole, appStarted = false;
+// A password recovery callback must open the password form, not the business dashboard.
+let recoveryMode = new URLSearchParams(location.search).get('type') === 'recovery' || location.hash.includes('type=recovery');
 let pending=null, running=false, interrupted=false, unsaved=false, saveWaiters=[];
 let members=[];
 function message(text, type='error') { const n=document.getElementById('auth-message');if(n){n.textContent=text;n.className='auth-message '+type;}else alert(text); }
@@ -65,9 +67,9 @@ function renderLogin(mode='login'){
         const username=String(f.get('username')||'').toLowerCase();
         const {data,error}=await client.auth.signUp({email:identifier,password,options:{data:{full_name:String(f.get('full_name')||''),requested_username:username},emailRedirectTo:location.origin+location.pathname}});
         if(error)throw error;
-        message(data.session?'Account created. Complete your business setup.':'Check your email to confirm your account, then sign in. Your username will be reserved when your account is verified.','success');
+        message(data.session?'Account created. Complete your business setup.':'Check your email to confirm your account, then sign in. If your chosen username is still available when you verify your email, it will be applied to your profile.','success');
       }else if(recovery){const {error}=await client.auth.resetPasswordForEmail(identifier,{redirectTo:location.origin+location.pathname});if(error)throw error;message('If that email has an account, a reset link will arrive shortly.','success');}
-      else if(reset){const {error}=await client.auth.updateUser({password});if(error)throw error;message('Password updated.','success');setTimeout(()=>void showWorkspaces(),700);}
+      else if(reset){const {error}=await client.auth.updateUser({password});if(error)throw error;recoveryMode=false;history.replaceState({},'',location.pathname);message('Password updated.','success');setTimeout(()=>void showWorkspaces(),700);}
       else if(identifier.includes('@')){const {error}=await client.auth.signInWithPassword({email:identifier,password});if(error)throw error;}
       else{
         const response=await client.functions.invoke('username-login',{body:{username:identifier.toLowerCase(),password}});
@@ -153,10 +155,10 @@ async function init(){
     const {data,error}=await client.auth.getSession();if(error)throw error;
     session=data.session;
     client.auth.onAuthStateChange((event,nextSession)=>{
-      if(event==='PASSWORD_RECOVERY'){session=nextSession;renderLogin('reset');return;}
-      if(nextSession?.user?.id!==session?.user?.id){session=nextSession;setTimeout(()=>nextSession?void showWorkspaces():renderLogin(),0);}
+      if(event==='PASSWORD_RECOVERY'){session=nextSession;recoveryMode=true;renderLogin('reset');return;}
+      if(nextSession?.user?.id!==session?.user?.id){session=nextSession;setTimeout(()=>nextSession?(recoveryMode?renderLogin('reset'):void showWorkspaces()):renderLogin(),0);}
     });
-    if(session)await showWorkspaces();else renderLogin();
+    if(session){if(recoveryMode)renderLogin('reset');else await showWorkspaces();}else renderLogin();
   }catch(error){page('Connection unavailable',error.message||'We could not load the sign-in service.','<button class="auth-primary" id="retry">Retry</button>');document.getElementById('retry').onclick=()=>location.reload();}
 }
 void init();
