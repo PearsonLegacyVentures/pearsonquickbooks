@@ -1,6 +1,6 @@
-// Public browser configuration only. Never put service_role or other secret keys here.
-// Set these after provisioning a dedicated Supabase project for Invoice Studio.
+// Public Supabase browser configuration for PearsonQuickBooks.
+// Publishable keys are safe in frontend source; NEVER place service-role/secret keys here.
 window.INVOICE_STUDIO_CONFIG = {
-  supabaseUrl: '',
-  supabasePublishableKey: ''
+  supabaseUrl: 'https://zjroclvywetevksdbfjd.supabase.co',
+  supabasePublishableKey: 'sb_publishable_Nz_HrJ3ogjljBtrRttNkWQ_RFpusP6V'
 };
