@@ -19,7 +19,7 @@ A standalone, mobile-first invoicing web application for small businesses, devel
 ## Production setup and current progress
 
 1. **Done:** Dedicated Supabase project `zjroclvywetevksdbfjd` in Pearson Legacy Ventures, US East, created at quoted $0/month, distinct from all other businesses.
-2. **Done (structural only):** `supabase/schema.sql` was applied to this project using migration `initial_invoice_studio_multi_tenant_schema`; public table RLS is enabled. Authenticated cross-workspace tests with real users and advisor remediation review remain required.
+2. **Done (structural only):** `supabase/schema.sql` was applied to this project using migration `initial_invoice_studio_multi_tenant_schema`; public table RLS is enabled; a second migration `add_missing_foreign_key_indexes` created indexes on the owner and invitation-creator foreign keys. Authenticated cross-workspace tests with real users and advisor remediation review remain required.
 3. **Done on development branch only:** `config.js` contains the project's public URL and publishable key. The `main` production branch remains deliberately unconfigured until end-to-end checks pass.
 4. **Pending:** Configure Supabase Auth → Email + Confirm Email; custom SMTP; Site URL `https://finance.bahamasaisolutions.com` and allowed Redirect URLs covering both `https://finance.bahamasaisolutions.com/**` and `https://pearsonquickbooks.pages.dev/**`, plus the development preview origin.
 5. Configure Google OAuth in Google Cloud and enable Google in Supabase Auth. Add the project's Supabase OAuth callback URL to Google's authorized redirect URIs. Google login will not work until provider credentials are configured.
