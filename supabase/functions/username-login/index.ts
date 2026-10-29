@@ -3,7 +3,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.98.0';
 
 Deno.serve(async req => {
-  const configuredOrigins = (Deno.env.get('ALLOWED_ORIGINS') || '').split(',').map(x => x.trim()).filter(Boolean);
+  const configuredOrigins = (Deno.env.get('ALLOWED_ORIGINS') || 'https://finance.bahamasaisolutions.com,https://pearsonquickbooks.pages.dev').split(',').map(x => x.trim()).filter(Boolean);
   const origin = req.headers.get('origin') || '';
   const cors = { 'Access-Control-Allow-Origin': configuredOrigins.includes(origin) ? origin : 'null', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS', Vary:'Origin' };
   if (req.method === 'OPTIONS') return new Response('', { status:204, headers:cors });
