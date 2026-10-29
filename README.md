@@ -16,15 +16,15 @@ A standalone, mobile-first invoicing web application for small businesses, devel
 
 **No paid subscriptions or invoicing limits are imposed in the code.** Production capacity depends on the service tiers and infrastructure paid for by the operator. The app is not a full accounting/general-ledger system; statements are management summaries, not audited accounts.
 
-## Production setup (not yet completed)
+## Production setup and current progress
 
-1. Provision a **new dedicated** Supabase project for Invoice Studio. **Do not** use another venture's database. Confirm any paid plan or resource costs before provisioning.
-2. Run `supabase/schema.sql` using the Supabase SQL editor against the new project, after reviewing schema and security policy. Check the security advisors and verify RLS using two unrelated test users. The SQL has not yet been applied to a live database.
-3. Set `config.js` to the project's public URL and **publishable** (not secret/service-role) key. The blank committed template displays a setup-required screen; it deliberately prevents collecting customer records until the backend is configured.
-4. Configure Supabase Auth → Email + Confirm Email; configure custom SMTP (the default sender is rate limited). Set Site URL and allowed Redirect URLs to the final HTTPS domain and localhost for development.
+1. **Done:** Dedicated Supabase project `zjroclvywetevksdbfjd` in Pearson Legacy Ventures, US East, created at quoted $0/month, distinct from all other businesses.
+2. **Done (structural only):** `supabase/schema.sql` was applied to this project using migration `initial_invoice_studio_multi_tenant_schema`; public table RLS is enabled. Authenticated cross-workspace tests with real users and advisor remediation review remain required.
+3. **Done on development branch only:** `config.js` contains the project's public URL and publishable key. The `main` production branch remains deliberately unconfigured until end-to-end checks pass.
+4. **Pending:** Configure Supabase Auth → Email + Confirm Email; custom SMTP; Site URL `https://finance.bahamasaisolutions.com` and allowed Redirect URLs covering both `https://finance.bahamasaisolutions.com/**` and `https://pearsonquickbooks.pages.dev/**`, plus the development preview origin.
 5. Configure Google OAuth in Google Cloud and enable Google in Supabase Auth. Add the project's Supabase OAuth callback URL to Google's authorized redirect URIs. Google login will not work until provider credentials are configured.
-6. Deploy `supabase/functions/username-login/index.ts` with `verify_jwt=false` and `ALLOWED_ORIGINS=https://YOUR_APP_DOMAIN`. Keep the service role and anon keys only in the Supabase Edge Function environment. Confirm 5-attempt/15-min username-login rate limiting and invalid login responses. Consider CAPTCHA and abuse monitoring before large public launch.
-7. Deploy static files from repository root on Cloudflare Pages (build command: none; output dir: `.`) or another HTTPS host. Configure a custom domain and HTTPS. Do not go live until authentication and privacy tests pass.
+6. Deploy `supabase/functions/username-login/index.ts` with `verify_jwt=false`; default origin allowlist uses the verified finance domain and Pages hostname, and `ALLOWED_ORIGINS` environment setting can override it. Keep service role and anon keys only in Supabase Edge Functions. Test rate limiting and add CAPTCHA/abuse monitoring before public launch.
+7. **Existing, not yet updated:** Cloudflare Pages `pearsonquickbooks`, production domain `https://finance.bahamasaisolutions.com` (GitHub `main`). Preview builds run on development branches. Do not promote backend config to `main` until authentication/security tests pass.
 8. Before onboarding customers: test registration/confirmation/reset/Google login, username login, invitations, viewer restrictions, cross-tenant RLS, concurrent edits, expired invites, record exports, PDF print on iOS and desktop, backups, alerts, accessibility and load handling.
 
 ## Local preview
@@ -43,4 +43,4 @@ A standalone, mobile-first invoicing web application for small businesses, devel
 
 ## Status
 
-Application files and backend schema are provided in GitHub. Local JavaScript syntax checks and browser UI tests were performed with a mock backend. **Live database migrations, real signup/login, cross-user synchronization, email delivery, production hosting and Google OAuth have not yet been configured or validated.** Do not market as a live production SaaS until those pass.
+The dedicated Supabase project and initial database migration are now live. Browser config is staged on `setup/supabase-accounts`, not promoted to production. Local JavaScript syntax checks/browser UI tests were performed with a mock backend. **Real signup/login, cross-user security testing, SMTP, Google OAuth and production app-to-database operation remain unverified.** Do not market as a live SaaS until those pass.
