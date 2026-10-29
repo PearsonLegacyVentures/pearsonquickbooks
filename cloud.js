@@ -111,7 +111,8 @@ async function selectWorkspace(item){
   workspace=item;memberRole=item.role;cloud.role=item.role;cloud.currentWorkspace=item.id;cloud.user=session.user;cloud.initialState=item.data;
   interrupted=false;pending=null;unsaved=false;localStorage.setItem('invoice-studio-current-workspace',item.id);
   if(!appStarted){appStarted=true;await import('./app.js');}
-  else if(typeof globalThis.InvoiceStudioHydrate==='function')globalThis.InvoiceStudioHydrate(item.data);
+  // ESM imports are cached: always rehydrate on subsequent sign-in or workspace switch.
+  if(typeof globalThis.InvoiceStudioHydrate==='function')globalThis.InvoiceStudioHydrate(item.data);
   syncIndicator();
 }
 async function refreshWorkspace(){const {data,error}=await client.from('workspaces').select('id,name,data,revision').eq('id',workspace.id).single();if(error)throw error;await selectWorkspace({...data,role:memberRole});}
