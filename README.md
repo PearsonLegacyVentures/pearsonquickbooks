@@ -44,3 +44,16 @@ A standalone, mobile-first invoicing web application for small businesses, devel
 ## Status
 
 The dedicated Supabase project and initial database migration are now live. Browser config is staged on `setup/supabase-accounts`, not promoted to production. Local JavaScript syntax checks/browser UI tests were performed with a mock backend. **Real signup/login, cross-user security testing, SMTP, Google OAuth and production app-to-database operation remain unverified.** Do not market as a live SaaS until those pass.
+
+## Supabase/Google rollout check — 2026-10-29
+
+- Dedicated Supabase project: `zjroclvywetevksdbfjd` (US East; creation quoted at $0/month).
+- Applied migrations: `initial_invoice_studio_multi_tenant_schema` and `add_missing_foreign_key_indexes`.
+- Supabase Auth Site URL: `https://finance.bahamasaisolutions.com`; redirect allowlist includes production, stable Pages hostname, setup preview branch, localhost:8000.
+- Email/password provider enabled, **Confirm email enabled**. Custom SMTP still **disabled**; public email sign-ups are not production-ready.
+- Dedicated Google Cloud project `PearsonQuickBooks` created without billing. OAuth consent screen `Invoice Studio` (External), web OAuth client `Invoice Studio / Supabase` created with callback `https://zjroclvywetevksdbfjd.supabase.co/auth/v1/callback`. **Supabase's Google provider is not yet enabled**, because credentials must be transferred privately via the provider settings interface (never via GitHub/chat).
+- Username login Edge Function `username-login` deployed version 1. Its real-login behavior has not yet been end-to-end tested.
+- Simulated two unrelated users inside a rollback-only SQL transaction. Verified workspace and member isolation, profile isolation, cross-tenant write rejection, cross-tenant invitation rejection, expected revision increment and `STALE_WRITE` rejection. Database remained empty after rollback; replay with `tests/rls-tenant-isolation.sql`.
+- Supabase Security Advisor flags four deliberately authenticated SECURITY DEFINER RPCs for review; all four must remain permission-checked. Private login rate-limit table has RLS disabled but is in the non-exposed `private` schema and neither anon nor authenticated roles has SELECT.
+- Cloudflare Pages project `pearsonquickbooks` is already connected to GitHub and `finance.bahamasaisolutions.com`. Production `main` still shows setup-required; **do not merge** the setup branch or invite public registrations until Google and SMTP configuration and live cross-account tests pass.
+
