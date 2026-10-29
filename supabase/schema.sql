@@ -44,6 +44,8 @@ create table if not exists private.login_rate_limits (
  window_started timestamptz not null default now()
 );
 create index if not exists idx_members_user on public.workspace_members(user_id);
+create index if not exists idx_workspaces_owner_id on public.workspaces(owner_id);
+create index if not exists idx_workspace_invites_created_by on public.workspace_invites(created_by);
 create index if not exists idx_invites_workspace on public.workspace_invites(workspace_id, expires_at);
 
 create or replace function private.create_profile() returns trigger language plpgsql security definer set search_path='' as $$
