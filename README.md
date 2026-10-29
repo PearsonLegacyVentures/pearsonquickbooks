@@ -1,51 +1,46 @@
-# Invoice Studio — free, offline-first invoicing MVP
+# Invoice Studio — free invoicing with user accounts
 
-Standalone web application. No Node, backend, paid account, or API keys required to run.
+A standalone, mobile-first invoicing web application for small businesses, developed by Bahamas AI Solutions. Source repository: `PearsonLegacyVentures/pearsonquickbooks`.
 
-## Launch
+## Features built
 
-Open `index.html` in Chrome, Safari or Firefox on desktop, or host this folder on any HTTPS static host such as Cloudflare Pages. For reliable browser storage and mobile PWA installation, use an HTTPS origin (or localhost).
+- Email/password registration, email verification and reset; Google OAuth; selected username (username sign-in via rate-limited Edge Function)
+- Multi-business accounts and multiple teammates per business (owner, admin, editor, viewer)
+- Server-enforced workspace isolation via Postgres RLS and secure RPC functions
+- Cloud persistence with revision checks: concurrent edits are rejected instead of silently overwriting data
+- Customers, reusable products/services, estimates, conversion to invoices, invoices, partial/full payments, expense categories
+- Configurable business identity (logo, name, address, tax ID, contact details, website), tax, currency, invoice numbering, default terms and bank/payment instructions
+- Branded printable invoices and PDF via the browser's Print / Save PDF
+- Branded printable management reports: income/expense summary, aging receivables, expense detail, invoiced tax and payments
+- CSV and JSON backup/restore; mobile-first dashboard
 
-For local development:
+**No paid subscriptions or invoicing limits are imposed in the code.** Production capacity depends on the service tiers and infrastructure paid for by the operator. The app is not a full accounting/general-ledger system; statements are management summaries, not audited accounts.
 
-```sh
-python3 -m http.server 8080
-# visit http://localhost:8080
-```
+## Production setup (not yet completed)
 
-## Included
+1. Provision a **new dedicated** Supabase project for Invoice Studio. **Do not** use another venture's database. Confirm any paid plan or resource costs before provisioning.
+2. Run `supabase/schema.sql` using the Supabase SQL editor against the new project, after reviewing schema and security policy. Check the security advisors and verify RLS using two unrelated test users. The SQL has not yet been applied to a live database.
+3. Set `config.js` to the project's public URL and **publishable** (not secret/service-role) key. The blank committed template displays a setup-required screen; it deliberately prevents collecting customer records until the backend is configured.
+4. Configure Supabase Auth → Email + Confirm Email; configure custom SMTP (the default sender is rate limited). Set Site URL and allowed Redirect URLs to the final HTTPS domain and localhost for development.
+5. Configure Google OAuth in Google Cloud and enable Google in Supabase Auth. Add the project's Supabase OAuth callback URL to Google's authorized redirect URIs. Google login will not work until provider credentials are configured.
+6. Deploy `supabase/functions/username-login/index.ts` with `verify_jwt=false` and `ALLOWED_ORIGINS=https://YOUR_APP_DOMAIN`. Keep the service role and anon keys only in the Supabase Edge Function environment. Confirm 5-attempt/15-min username-login rate limiting and invalid login responses. Consider CAPTCHA and abuse monitoring before large public launch.
+7. Deploy static files from repository root on Cloudflare Pages (build command: none; output dir: `.`) or another HTTPS host. Configure a custom domain and HTTPS. Do not go live until authentication and privacy tests pass.
+8. Before onboarding customers: test registration/confirmation/reset/Google login, username login, invitations, viewer restrictions, cross-tenant RLS, concurrent edits, expired invites, record exports, PDF print on iOS and desktop, backups, alerts, accessibility and load handling.
 
-- Dashboard with billed, paid, outstanding and overdue figures
-- Customers with contact and optional tax ID
-- Products and services catalog with prices, units, categories, taxability
-- Draft, sent, partially paid, paid and overdue invoices
-- Estimates, accepted/declined status, convert estimate to invoice
-- Invoice editor with line items, discount, configurable tax, notes, due date
-- Invoice payments (partial and full) and outstanding-balance tracking
-- Professional printer-friendly invoices: use **Print / Save PDF** to save via the browser's PDF printer
-- Email and WhatsApp message handoff (user attaches PDF manually)
-- Expense entry and income/expense summaries, CSV exports
-- Business profile, logo, tax ID, numbering, currency, payment instructions
-- JSON backup and restore (download backups regularly)
-- Installable mobile-first PWA and offline asset cache on HTTPS
+## Local preview
 
-## IMPORTANT: Scope and limitations
+`python3 -m http.server 8000` — open http://localhost:8000. Without Supabase configuration you will see the setup-required screen. There is no hard-coded demo login or bypass for production. `tests/qa_browser.py` tests the interface with a local mock cloud layer (not a live backend).
 
-This is a **single-device, locally stored MVP**, not a hosted SaaS or full accounting platform. Data remains in the browser's localStorage and is **not** backed up automatically, synced between devices, encrypted at rest by this app, or recoverable after browser storage is cleared. Never use private/incognito mode for permanent records. Download a backup before changing browsers or devices. Treat imported backup files as sensitive.
+## Design/security notes
 
-Automatic emails, customer portals, payment gateways, automated recurring invoicing, login/team access, inventory stock management, and cross-device sync are NOT implemented. Email/WhatsApp actions create message drafts but do not attach a PDF or send anything automatically. Print / Save PDF invokes browser printing.
+- Server uses a per-workspace JSON document for version 2 to preserve compatibility with the existing static app. A revision check prevents silent last-write-wins. This approach is suitable for an early release but **not** high-volume simultaneous edits, full double-entry bookkeeping, or large datasets. Normalize customers/documents/payments into independent tables, add an immutable audit log and server-side invoice sequence allocation before launching at scale.
+- Supabase providers keep credentials; app never handles Google secrets or stores user passwords itself.
+- Username-password endpoint must be deployed with server-side rate limits and secrets. It does not expose user email addresses in its response.
+- Edit permissions are enforced by database checks; frontend read-only states are additional user experience safeguards.
+- JSON import intentionally replaces all workspace data after confirmation. Workspace members should coordinate restores; backups are essential.
+- No card processing, automated sending, external billing gateways, recurring invoicing scheduler, bank reconciliation, journal ledger, inventory accounting, or automated tax filings.
+- Public `config.js` contains only publishable values; NEVER commit Supabase service-role keys, Google OAuth client secrets, SMTP passwords or credentials.
 
-VAT/tax calculation is configurable and disabled by default. It is not a compliance certification: check local invoice requirements, registration status, and tax rules before using generated invoices as official tax documents. Income vs expenses is informational only, not a formal P&L or cash-basis accounting statement.
+## Status
 
-## Deployment
-
-Upload the entire folder to Cloudflare Pages as a static site. No build command; output directory `/`. Before a public multi-user launch, add server-side auth, RLS-isolated database persistence, backups, and security/compliance testing. Do **not** market the browser-only version as synchronized/cloud-hosted or as a secure multi-user service.
-
-## Files
-
-- `index.html` application shell
-- `app.js` all business logic and rendering
-- `styles.css` UI and print styles
-- `manifest.webmanifest`, `sw.js`, `icon.svg` installability/offline support
-
-License: private prototype until ownership and licensing are decided.
+Application files and backend schema are provided in GitHub. Local JavaScript syntax checks and browser UI tests were performed with a mock backend. **Live database migrations, real signup/login, cross-user synchronization, email delivery, production hosting and Google OAuth have not yet been configured or validated.** Do not market as a live production SaaS until those pass.
